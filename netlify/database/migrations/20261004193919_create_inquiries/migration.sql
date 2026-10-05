@@ -1,0 +1,20 @@
+CREATE TABLE "inquiries" (
+	"id" uuid PRIMARY KEY,
+	"kind" text NOT NULL,
+	"name" text NOT NULL,
+	"email" text NOT NULL,
+	"business" text,
+	"state" text,
+	"plan" text,
+	"subject" text,
+	"message" text NOT NULL,
+	"consent" boolean NOT NULL,
+	"payload_hash" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"notification_sent_at" timestamp with time zone,
+	"confirmation_sent_at" timestamp with time zone,
+	"email_attempts" integer DEFAULT 0 NOT NULL,
+	"email_error" text,
+	"next_attempt_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"locked_until" timestamp with time zone
+);
