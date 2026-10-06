@@ -8,7 +8,7 @@ const siteDescription = 'Social media management for local businesses in Ohio, P
 
 export const Route = createRootRoute({
   head: () => ({
-    links: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    links: [{ rel: 'icon', type: 'image/png', href: '/logo.png' }],
     meta: [
       {
         charSet: 'utf-8',
