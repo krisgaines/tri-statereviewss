@@ -42,7 +42,7 @@ export const Route = createRootRoute({
       },
       {
         name: 'theme-color',
-        content: '#303c2d',
+        content: '#143f5c',
       },
       {
         name: 'twitter:card',
