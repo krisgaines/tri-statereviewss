@@ -3,7 +3,7 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 
 import '../styles.css'
 
-const siteName = 'Tri-State Reviews | Local roots. Social reach.'
+const siteName = 'Social Media Management in Ohio, PA & WV | Tri-State Reviews'
 const siteDescription = 'Social media management for local businesses in Ohio, Pennsylvania, and West Virginia. Thoughtful content, real connections, and monthly plans starting at $150.'
 
 export const Route = createRootRoute({
