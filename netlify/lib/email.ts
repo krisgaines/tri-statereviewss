@@ -26,7 +26,7 @@ export async function deliverInquiry(id: string) {
   const database = getDb()
   const now = new Date()
   const [record] = await database.update(inquiries)
-    .set({ lockedUntil: new Date(now.getTime() + 120_000) })
+    .set({ lockedUntil: new Date(now.getTime() + 120_000), emailAttempts: inquiries.emailAttempts + 1 })
     .where(and(eq(inquiries.id, id), lt(inquiries.emailAttempts, 12), lte(inquiries.nextAttemptAt, now), or(isNull(inquiries.lockedUntil), lt(inquiries.lockedUntil, now))))
     .returning()
   if (!record) return
@@ -65,12 +65,10 @@ export async function deliverInquiry(id: string) {
   }
   const results = await Promise.allSettled(jobs)
   const failed = results.some(result => result.status === 'rejected')
-  const attempts = record.emailAttempts + (jobs.length ? 1 : 0)
   await database.update(inquiries).set({
     lockedUntil: null,
-    emailAttempts: attempts,
     emailError: failed ? 'Email delivery requires a retry. Check provider configuration and logs.' : null,
-    nextAttemptAt: new Date(Date.now() + Math.min(3_600_000, 300_000 * 2 ** record.emailAttempts)),
+    nextAttemptAt: new Date(Date.now() + Math.min(3_600_000, 300_000 * 2 ** (record.emailAttempts - 1))),
   }).where(eq(inquiries.id, id))
   if (failed) console.error('A Tri-State Reviews email was not accepted; a retry is queued.')
 }
