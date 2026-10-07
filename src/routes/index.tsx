@@ -27,7 +27,7 @@ function Starburst({ className }: { className: string }) {
 }
 
 function Brand({ light = false }: { light?: boolean }) {
-  return <a href="#home" className={`brand ${light ? 'brand-light' : ''}`} aria-label="Tri-State Reviews home"><img className="brand-logo" src="/logo.png" alt="" /></a>
+  return <a href="#home" className={`brand ${light ? 'brand-light' : ''}`} aria-label="Tri-State Reviews home"><img className="brand-logo" src="/logo.png" alt="" width={415} height={463} /></a>
 }
 
 function Dialog({ title, children, close }: { title: string; children: ReactNode; close: () => void }) {
