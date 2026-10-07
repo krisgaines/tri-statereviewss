@@ -7,7 +7,7 @@ A responsive social media management website for local businesses in Ohio, Penns
 - TanStack Start, React 19, TanStack Router, and TypeScript
 - Vite and custom responsive CSS with Tailwind available
 - Lucide icons, DM Sans and Manrope typography
-- Netlify Functions for server-side submission validation, email delivery, and Square checkout links
+- Netlify Functions for server-side submission validation, email delivery, and Stripe-hosted checkout
 - Netlify Database with the native Drizzle adapter for persistent inquiries
 - Resend for transactional owner notifications and customer confirmations
 - Netlify Image CDN for locally stored portfolio photographs
@@ -36,17 +36,19 @@ Both forms send owner notifications to `tristatereviewss@gmail.com`. Replying to
 
 Messages are saved before email is attempted. If email settings are missing, the website honestly reports that receipts are delayed and supplies a reference. Once sending is configured, the production scheduled worker processes the backlog. It runs every five minutes and processes four records per run, with exponential retry delays, a database lease, independent notification/confirmation tracking, and provider idempotency keys. After twelve attempts, a record requires operator attention; the original message remains saved. The retry schedule only runs on published production deploys. Preview submissions attempt delivery immediately if credentials are enabled there, but do not receive scheduled retries. Use production-only email credentials unless preview mail is desired.
 
-## Square checkout activation
+## Stripe checkout activation
 
-Checkout uses Square-hosted payment links. Customers can pay once for one month of Associates ($150), Friends ($300), or Family ($450), or start an automatically renewing monthly subscription for one of those plans. Blueprint is a $200 one-time payment only. Inquiries alone never create a charge or subscription.
+Checkout creates a Stripe-hosted Checkout Session. Customers can pay once for one month of Associates ($150), Friends ($300), or Family ($450), or start an automatically renewing monthly subscription for one of those plans. Blueprint is a $200 one-time payment only. Plan names, prices, and recurring cadence are set on the server; inquiries alone never create a charge or subscription.
 
-1. Create a Square application with permission to create payment links and subscriptions, and configure its sandbox credentials first. Store its access token as the runtime-only Netlify variable `SQUARE_ACCESS_TOKEN`.
-2. Set `SQUARE_ENVIRONMENT` to `sandbox` while testing, then `production` when ready to accept real payments. Set `SQUARE_LOCATION_ID` to the matching environment’s location ID.
-3. In Square, create monthly subscription plan variations for Associates, Friends, and Family at the approved prices. Add each environment’s variation ID as the runtime-only Netlify variables `SQUARE_ASSOCIATES_PLAN_VARIATION_ID`, `SQUARE_FRIENDS_PLAN_VARIATION_ID`, and `SQUARE_FAMILY_PLAN_VARIATION_ID`.
-4. Make the variables available to the desired deploy contexts and redeploy. Keep tokens and plan IDs out of frontend code and source control.
-5. Test all one-time and monthly options in Square sandbox, including Blueprint’s one-time-only checkout. Before switching to production, confirm the production location and plan variation IDs and complete a real low-value test purchase if appropriate.
+1. In Stripe, start in test mode and copy the test-mode secret API key. In Netlify, add it under the project’s environment variables as `STRIPE_SECRET_KEY`, scoped to Functions at runtime and enabled for the deploy contexts you intend to use. Checkout Sessions are created only on the server.
+2. Create a webhook destination for `https://YOUR_SITE_DOMAIN/api/stripe/webhook`. Subscribe to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, and `customer.subscription.deleted`.
+3. Reveal that destination’s signing secret in Stripe and add it to Netlify as `STRIPE_WEBHOOK_SECRET`, also scoped to Functions at runtime and enabled in the matching deploy contexts. Each destination has a different signing secret. Keep both values out of source control and frontend code.
+4. Make both variables available to the deploy contexts where checkout should operate, then redeploy. Use test-mode credentials and a test-mode webhook destination while testing. Before accepting real payments, create a separate live-mode destination and set its live secret API key and signing secret in Netlify.
+5. Test one-time purchases for all four offers, monthly subscriptions for Associates, Friends, and Family, Blueprint’s one-time-only restriction, and webhook delivery from Stripe’s Workbench/Webhooks delivery view. Confirm signed events succeed and invalid signatures are rejected.
 
-One-time payments for monthly plans cover one month and do not renew. Monthly subscriptions renew automatically until canceled; customers can contact `tristatereviewss@gmail.com` for help managing or canceling a subscription. Square processes payment information and maintains the payment/subscription records in the Square account; this site does not collect card numbers or expose payment credentials in the browser. Operators review payments and manage subscriptions in Square.
+For local webhook testing, run the Stripe CLI listener forwarding to `localhost:8889/api/stripe/webhook` and set its generated signing secret as `STRIPE_WEBHOOK_SECRET` in the local Netlify Functions environment. Use a test-mode `STRIPE_SECRET_KEY` and test-mode events.
+
+The webhook verifies Stripe signatures and acknowledges event delivery; payment and subscription records remain in Stripe, and the site does not create a second payment ledger. The webhook currently does not send custom fulfillment messages or update local order state. Operators review charges and manage subscriptions in Stripe. One-time payments for monthly plans cover one month and do not renew. Subscriptions renew monthly until canceled; customers can contact `tristatereviewss@gmail.com` for help managing or canceling a subscription. This site does not collect or store card numbers.
 
 ## Data and migrations
 

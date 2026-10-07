@@ -2,9 +2,9 @@ import type { Config } from '@netlify/functions'
 import { z } from 'zod'
 
 const checkoutPlans = {
-  Associates: { amount: 15_000, name: 'Associates — one month of social media management', variation: 'SQUARE_ASSOCIATES_PLAN_VARIATION_ID' },
-  Friends: { amount: 30_000, name: 'Friends — one month of social media management', variation: 'SQUARE_FRIENDS_PLAN_VARIATION_ID' },
-  Family: { amount: 45_000, name: 'Family — one month of social media management', variation: 'SQUARE_FAMILY_PLAN_VARIATION_ID' },
+  Associates: { amount: 15_000, name: 'Associates — one month of social media management' },
+  Friends: { amount: 30_000, name: 'Friends — one month of social media management' },
+  Family: { amount: 45_000, name: 'Family — one month of social media management' },
   Blueprint: { amount: 20_000, name: 'Blueprint — one-time strategy and ad launch' },
 } as const
 
@@ -37,66 +37,57 @@ export default async function checkout(request: Request) {
 
   if (parsed.plan === 'Blueprint' && parsed.paymentType !== 'one_time') return fail('Blueprint is available as a one-time payment only.', 400)
 
-  const accessToken = Netlify.env.get('SQUARE_ACCESS_TOKEN')
-  const locationId = Netlify.env.get('SQUARE_LOCATION_ID')
-  const environment = Netlify.env.get('SQUARE_ENVIRONMENT')
-  if (!accessToken || !locationId || (environment !== 'sandbox' && environment !== 'production')) {
-    return fail('Online checkout is temporarily unavailable. Please contact us for help.', 503)
-  }
+  const secretKey = Netlify.env.get('STRIPE_SECRET_KEY')
+  if (!secretKey) return fail('Online checkout is temporarily unavailable. Please contact us for help.', 503)
 
   const selectedPlan = checkoutPlans[parsed.plan]
-  const subscriptionPlanId = 'variation' in selectedPlan ? Netlify.env.get(selectedPlan.variation) : undefined
-  if (parsed.paymentType === 'subscription' && !subscriptionPlanId) {
-    return fail('Monthly subscriptions are temporarily unavailable. Please contact us for help.', 503)
-  }
+  const siteUrl = new URL(request.url).origin
+  const sessionParams = new URLSearchParams({
+    mode: parsed.paymentType === 'subscription' ? 'subscription' : 'payment',
+    success_url: `${siteUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}#pricing`,
+    cancel_url: `${siteUrl}/?checkout=cancelled#pricing`,
+    client_reference_id: parsed.requestId,
+    'line_items[0][price_data][currency]': 'usd',
+    'line_items[0][price_data][unit_amount]': String(selectedPlan.amount),
+    'line_items[0][price_data][product_data][name]': selectedPlan.name,
+    'line_items[0][quantity]': '1',
+    'metadata[request_id]': parsed.requestId,
+    'metadata[plan]': parsed.plan,
+    'metadata[payment_type]': parsed.paymentType,
+  })
 
-  const baseUrl = environment === 'sandbox' ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com'
-  const body = {
-    idempotency_key: parsed.requestId,
-    quick_pay: {
-      name: selectedPlan.name,
-      price_money: { amount: selectedPlan.amount, currency: 'USD' },
-      location_id: locationId,
-    },
-    checkout_options: {
-      ...(parsed.paymentType === 'subscription' ? { subscription_plan_id: subscriptionPlanId } : {}),
-      merchant_support_email: 'tristatereviewss@gmail.com',
-    },
+  if (parsed.paymentType === 'subscription') {
+    sessionParams.set('line_items[0][price_data][recurring][interval]', 'month')
+    sessionParams.set('subscription_data[metadata][request_id]', parsed.requestId)
+    sessionParams.set('subscription_data[metadata][plan]', parsed.plan)
   }
 
   try {
-    const squareResponse = await fetch(`${baseUrl}/v2/online-checkout/payment-links`, {
+    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'Square-Version': '2026-09-16',
+        Authorization: `Bearer ${secretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Idempotency-Key': parsed.requestId,
       },
-      body: JSON.stringify(body),
+      body: sessionParams,
       signal: AbortSignal.timeout(10_000),
     })
-    const result: unknown = await squareResponse.json().catch(() => null)
-    if (!squareResponse.ok || !result || typeof result !== 'object' || !('payment_link' in result)) {
-      console.error('Square checkout link creation failed.')
+    const result: unknown = await stripeResponse.json().catch(() => null)
+    if (!stripeResponse.ok || !result || typeof result !== 'object' || !('url' in result) || typeof result.url !== 'string') {
+      console.error('Stripe checkout session creation failed.')
       return fail('We could not start checkout. Please try again or contact us for help.', 502)
     }
 
-    const paymentLink = result.payment_link
-    if (!paymentLink || typeof paymentLink !== 'object' || !('url' in paymentLink) || typeof paymentLink.url !== 'string') {
-      console.error('Square returned an invalid checkout link.')
-      return fail('We could not start checkout. Please try again or contact us for help.', 502)
-    }
-
-    const checkoutUrl = new URL(paymentLink.url)
-    const trustedHosts = ['square.link', 'sandbox.square.link', 'checkout.square.site']
-    if (checkoutUrl.protocol !== 'https:' || !trustedHosts.includes(checkoutUrl.hostname)) {
-      console.error('Square returned an untrusted checkout link.')
+    const checkoutUrl = new URL(result.url)
+    if (checkoutUrl.protocol !== 'https:' || checkoutUrl.hostname !== 'checkout.stripe.com') {
+      console.error('Stripe returned an untrusted checkout URL.')
       return fail('We could not start checkout. Please try again or contact us for help.', 502)
     }
 
     return Response.json({ url: checkoutUrl.toString() }, { headers: responseHeaders })
   } catch {
-    console.error('Square checkout could not be reached.')
+    console.error('Stripe checkout could not be reached.')
     return fail('We could not start checkout. Please try again or contact us for help.', 502)
   }
 }

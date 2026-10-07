@@ -15,7 +15,8 @@ This is a responsive marketing site for Tri-State Reviews, a local social media 
 - `db/index.ts`: invocation-time creation of the native Netlify Database Drizzle client.
 - `drizzle.config.ts`: PostgreSQL migration generation, targeting `netlify/database/migrations/`.
 - `netlify/functions/contact.mts`: `POST /api/contact`, request validation, rate limiting, durable save, safe retry handling, and immediate email processing.
-- `netlify/functions/checkout.mts`: `POST /api/checkout`, server-validated pricing, Square-hosted one-time checkout, and monthly subscriptions.
+- `netlify/functions/checkout.mts`: `POST /api/checkout`, server-validated pricing, Stripe-hosted one-time checkout, and monthly subscriptions.
+- `netlify/functions/stripe-webhook.mts`: signed Stripe webhook verification at `POST /api/stripe/webhook`; acknowledges events without persisting a second payment ledger.
 - `netlify/lib/email.ts`: Resend mail content, independent owner/customer delivery tracking, database leasing, and retry timing.
 - `netlify/functions/email-retry.mts`: production-only scheduled worker, running every five minutes with a small concurrent batch.
 - `README.md`: local development, operator setup, content editing, persistence, and email activation instructions.
@@ -37,7 +38,7 @@ Save a submission before attempting email. Preserve client-generated UUID idempo
 
 Both owner notification types go to `tristatereviewss@gmail.com`. Read only `RESEND_API_KEY` and `RESEND_FROM_EMAIL` for sending configuration. The sender must be a verified address, not the Gmail recipient. Missing configuration must not prevent saving a valid message or produce a false claim of email delivery. Failed mail retries with bounded exponential backoff, up to twelve attempts; exhausted records require operator attention. Scheduled retries do not run on deploy previews.
 
-Square checkout uses server-only runtime variables: `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SQUARE_ENVIRONMENT`, and the three monthly plan variation IDs. Validate all plan names and prices on the server; never accept a customer-supplied amount, expose Square credentials to the browser, log provider payloads, or trust arbitrary redirect URLs. Square hosts the checkout and stores its payment/subscription records; do not create a second payment ledger unless a future requirement calls for it.
+Stripe checkout uses server-only runtime variables: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Validate all plan names, prices, and billing cadence on the server; never accept a customer-supplied amount, expose Stripe credentials to the browser, log provider payloads, or trust arbitrary redirect URLs. Stripe hosts checkout and stores its payment/subscription records; do not create a second payment ledger unless a future requirement calls for it. Verify webhook signatures against the raw request body and acknowledge only signed events.
 
 ## Content invariants
 
