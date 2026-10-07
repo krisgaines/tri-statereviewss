@@ -21,7 +21,7 @@ export default async function contact(request: Request, context: Context) {
     email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
     business: z.string().trim().max(150).optional().default(''),
     state: z.enum(['', 'Ohio', 'Pennsylvania', 'West Virginia', 'Elsewhere']).optional().default(''),
-    plan: z.enum(['Associates', 'Friends', 'Family', 'Not sure yet']).nullable().optional(),
+    plan: z.enum(['Associates', 'Friends', 'Family', 'Blueprint', 'Not sure yet']).nullable().optional(),
     subject: z.string().trim().max(150).optional().default(''),
     message: z.string().trim().min(10).max(5000),
     website: z.string().max(300).optional().default(''),
