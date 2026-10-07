@@ -50,7 +50,7 @@ The public submission endpoint checks origin, validates and bounds input, requir
 - Site title and share description: `src/routes/__root.tsx`
 - Colors, typography, responsive layout, and motion preferences: `src/styles.css`
 - Sender integration and email copy: `netlify/lib/email.ts`
-- Photos: `public/img/`; the original stock photographs came from Unsplash image IDs `photo-1442512595331-e89e73853f31`, `photo-1416879595882-3373a0480b5b`, and `photo-1509440159596-0249088772ff`.
+- Photos: `public/img/`; the original stock photographs came from Unsplash image IDs `photo-1442512595331-e89e73853f31`, `photo-1416879595882-3373a0480b5b`, and `photo-1509440159596-0249088772ff`. The floral, bookshop, and market samples use `photo-1490750967868-88aa4486c946`, `photo-1507842217343-583bb7270b66`, and `photo-1542838132-92c53300491e` respectively.
 
 The monthly plans are Associates ($150), Friends ($300), and Family ($450), priced in USD. Their listed scopes are a starting point; final deliverables are agreed with the customer before service begins. Selecting a plan pre-fills the inquiry form and does not create a subscription or charge a payment. The portfolio businesses are fictional, clearly labeled sample concepts, not real clients or verified results. Replace them with approved client work when available.
 
