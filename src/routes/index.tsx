@@ -1,189 +1,57 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, ReactNode } from 'react'
-import { ArrowUpRight, ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, Instagram, Facebook, Heart, MapPin, Menu, MessageCircle, Send, Sparkles, X, Leaf, CalendarDays, PenTool, BarChart3, Youtube } from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { ArrowRight, ArrowUpRight, BarChart3, CalendarDays, Facebook, Heart, Instagram, Leaf, MapPin, MessageCircle, PenTool, Send, Sparkles } from 'lucide-react'
+import { ContactForm } from '@/components/contact-form'
+import { SiteFooter, SiteHeader } from '@/components/site-shell'
+import { image, plans } from '@/lib/site-data'
+import type { FormKind, Plan } from '@/lib/site-data'
 
-export const Route = createFileRoute('/')({ component: Home })
-type Plan = 'Associates' | 'Friends' | 'Family' | 'Blueprint' | 'Not sure yet'
-type CheckoutPlan = Exclude<Plan, 'Not sure yet'>
-type FormKind = 'inquiry' | 'support'
-const image = (name: string, width = 700) => `/.netlify/images?url=/img/${name}.jpg&w=${width}&fm=webp&q=85`
-const plans: { name: CheckoutPlan; price: number; cadence: 'month' | 'once'; description: string; features: string[] }[] = [
-  { name: 'Associates', price: 150, cadence: 'month', description: 'A little help. A stronger presence.', features: ['One social media platform', 'Monthly content planning', 'Branded posts & captions', 'Scheduled publishing'] },
-  { name: 'Friends', price: 300, cadence: 'month', description: 'More connection. More possibilities.', features: ['Up to two social platforms', 'Everything in Associates', 'Stories & community support', 'Monthly performance snapshot'] },
-  { name: 'Family', price: 450, cadence: 'month', description: 'Your business, with us by your side.', features: ['Up to three social platforms', 'Everything in Friends', 'Short-form video guidance', 'A dedicated strategy check-in'] },
-  { name: 'Blueprint', price: 200, cadence: 'once', description: 'A one-time strategy deck and ad launch.', features: ['A custom Blueprint strategy slideshow', 'Illustrative growth projections for each monthly plan', '$50 allocated toward your initial ad run', 'We set up and launch your initial ads'] },
-]
-const projects = [
-  { name: 'Willow & Co. Coffee', category: 'Food & drink', image: 'coffee', headline: 'Good things\nare brewing.', tag: 'A daily dose of community', description: 'An independent neighborhood café serving espresso, fresh pastries, and a familiar place to meet. This sample shows how everyday café moments can become warm, recognizable social content.', deliverables: ['A warm, consistent visual direction', 'Coffee features and behind-the-scenes stories', 'A sample monthly posting calendar'], color: 'coffee-project' },
-  { name: 'Little Leaf Market', category: 'Retail', image: 'plants', headline: 'Room to\ngrow.', tag: 'Growing a little local love', description: 'A friendly neighborhood plant shop for easy-care greenery, thoughtful gifts, and beginner-friendly advice. The sample content pairs product highlights with helpful plant-care ideas.', deliverables: ['Product-focused photography direction', 'Helpful plant-care post concepts', 'Seasonal campaign and caption ideas'], color: 'plant-project' },
-  { name: 'The Sunday Bakehouse', category: 'Food & drink', image: 'bakery', headline: 'A little\nsweeter.', tag: 'Fresh from the oven. Into the feed.', description: 'An independent bakery with small-batch breads, seasonal treats, and the kind of morning ritual regulars build into their week. This concept brings the menu and the people behind it into the feed.', deliverables: ['An editorial-style social feed concept', 'New menu and seasonal launch posts', 'Behind-the-scenes story templates'], color: 'bakery-project' },
-  { name: 'Maple & Main Floral', category: 'Retail', image: 'florals', headline: 'Flowers for\ntoday.', tag: 'Seasonal flowers, thoughtfully shared', description: 'A neighborhood flower studio creating seasonal bouquets, small celebration arrangements, and thoughtful everyday gifts. The sample approach follows the color and rhythm of each season.', deliverables: ['Seasonal bouquet spotlights', 'Occasion-based gift and arrangement ideas', 'A bright, botanical visual direction'], color: 'floral-project' },
-  { name: 'Lantern House Books', category: 'Retail', image: 'books', headline: 'Stories start\nhere.', tag: 'A good book brings us together', description: 'An independent bookshop for staff picks, new releases, cozy reading corners, and community-minded events. This concept gives the shop a welcoming voice between visits.', deliverables: ['Staff-pick and new-release features', 'Reading-list and event announcements', 'A warm, literary post and story style'], color: 'bookshop-project' },
-  { name: 'Market Street Provisions', category: 'Retail', image: 'market', headline: 'Fresh finds,\nclose to home.', tag: 'Good food from around the corner', description: 'A local provisions shop with fresh produce, pantry staples, and locally made finds for everyday meals. The sample content makes seasonal ingredients and neighborhood makers easy to discover.', deliverables: ['Produce and pantry product features', 'Local-maker introductions', 'Simple seasonal meal inspiration'], color: 'market-project' },
-]
-type Project = (typeof projects)[number]
+export const Route = createFileRoute('/')({
+  head: () => ({
+    meta: [
+      { title: 'Social Media Management in Ohio, PA & WV | Tri-State Reviews' },
+      { name: 'description', content: 'Social media management for local businesses in Ohio, Pennsylvania, and West Virginia. Thoughtful content, real connections, and monthly plans starting at $150.' },
+    ],
+  }),
+  component: Home,
+})
 
 function Starburst({ className }: { className: string }) {
   return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5" stroke="currentColor" strokeWidth="2.4" /></svg>
 }
 
-function Brand({ light = false }: { light?: boolean }) {
-  return <a href="#home" className={`brand ${light ? 'brand-light' : ''}`} aria-label="Tri-State Reviews home"><img className="brand-logo" src="/logo.png" alt="" width={415} height={463} /></a>
-}
-
-function Dialog({ title, children, close }: { title: string; children: ReactNode; close: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null)
-  useEffect(() => { dialog.current?.showModal() }, [])
-  return <dialog ref={dialog} className="detail-dialog" onCancel={close} onClose={close} onClick={event => { if (event.target === event.currentTarget) close() }} aria-labelledby="dialog-title"><button className="dialog-close icon-button" onClick={close} aria-label="Close dialog"><X /></button><h2 id="dialog-title">{title}</h2>{children}</dialog>
-}
-
-function ContactForm({ kind, plan, setPlan, success, setSuccess, submissionId, onStartAnother }: { kind: FormKind; plan: Plan; setPlan: (plan: Plan) => void; success: { reference: string; emailReady: boolean } | null; setSuccess: (success: { reference: string; emailReady: boolean } | null) => void; submissionId: string; onStartAnother: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = event.currentTarget
-    setBusy(true)
-    setError('')
-    const fields = Object.fromEntries(new FormData(form))
-    try {
-      const response = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fields, kind, plan: kind === 'inquiry' ? plan : null, consent: fields.consent === 'on', submissionId }), signal: AbortSignal.timeout(20_000) })
-      const result = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(result?.error || (response.status === 429 ? 'Too many messages. Please wait a few minutes and try again.' : 'Your message could not be saved. Please try again or email us directly.'))
-      setSuccess({ reference: result.reference, emailReady: result.emailReady })
-      form.reset()
-    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again.') }
-    finally { setBusy(false) }
-  }
-  if (success) return <div className="form-success" role="status"><span className="success-icon"><Check size={28} /></span><p className="eyebrow">MESSAGE RECEIVED</p><h3>You're on our radar.</h3><p>Your {kind === 'support' ? 'support request' : 'inquiry'} is safely saved. {success.emailReady ? 'Your confirmation email is queued for delivery. Check your inbox and spam folder shortly.' : 'Email confirmations are currently delayed. Keep your reference below, or email us directly if you need help.'}</p><p className="reference">Your reference: <strong>{success.reference}</strong></p><button className="button button-dark" onClick={onStartAnother}>Send another message <ArrowRight size={17} /></button></div>
-  return <form onSubmit={submit} className="contact-form">
-    <div className="form-row"><label>Your name <span>*</span><input name="name" disabled={busy} autoComplete="name" placeholder="Your full name" required minLength={2} maxLength={100} /></label><label>Email address <span>*</span><input name="email" disabled={busy} type="email" autoComplete="email" placeholder="you@yourbusiness.com" required maxLength={254} /></label></div>
-    {kind === 'inquiry' ? <><div className="form-row"><label>Business name <span>*</span><input name="business" disabled={busy} autoComplete="organization" placeholder="Your business name" required maxLength={150} /></label><label>Your state<select name="state" disabled={busy} defaultValue=""><option value="">Select your state</option><option>Ohio</option><option>Pennsylvania</option><option>West Virginia</option><option>Elsewhere</option></select></label></div><label>Which plan catches your eye?<select name="plan" id="plan-select" disabled={busy} value={plan} onChange={event => setPlan(event.target.value as Plan)}><option>Not sure yet</option>{plans.map(item => <option key={item.name} value={item.name}>{item.name} - ${item.price}{item.cadence === 'month' ? '/month' : ' one-time'}</option>)}</select></label></> : <label>What do you need help with? <span>*</span><input name="subject" disabled={busy} placeholder="A quick summary of your request" required maxLength={150} /></label>}
-    <label>{kind === 'inquiry' ? 'Tell us a little about your business' : 'How can we help?'} <span>*</span><textarea name="message" disabled={busy} placeholder={kind === 'inquiry' ? 'What do you do, and what would you love your social media to do for you?' : 'Share the details so we can help you get back on track.'} required minLength={10} maxLength={5000} rows={4} /></label>
-    <div className="honeypot" aria-hidden="true"><label>Leave this empty<input name="website" disabled={busy} tabIndex={-1} autoComplete="off" /></label></div>
-    <label className="consent"><input type="checkbox" name="consent" disabled={busy} required /><span>I agree to have my details stored so Tri-State Reviews can respond to this message.</span></label>
-    {error && <p className="form-error" role="alert">{error}</p>}
-    <button className="button button-dark submit-button" type="submit" disabled={busy}>{busy ? 'Saving your message...' : kind === 'inquiry' ? "Let's start a conversation" : 'Send support request'}{!busy && <ArrowUpRight size={19} />}</button>
-    <p className="form-note"><span className="small-dot" /> A real conversation. No pressure, no sales script.</p>
-  </form>
-}
-
 function Home() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [filter, setFilter] = useState('All work')
-  const [project, setProject] = useState<Project | null>(null)
-  const portfolioRef = useRef<HTMLDivElement>(null)
   const [kind, setKind] = useState<FormKind>('inquiry')
   const [plan, setPlan] = useState<Plan>('Not sure yet')
-  const [privacy, setPrivacy] = useState(false)
-  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null)
-  const [checkoutError, setCheckoutError] = useState('')
-  const [checkoutNotice, setCheckoutNotice] = useState('')
-  const checkoutRequestIds = useRef(new Map<string, string>())
   const [submissionIds, setSubmissionIds] = useState(() => ({ inquiry: crypto.randomUUID(), support: crypto.randomUUID() }))
   const [success, setSuccess] = useState<{ kind: FormKind; data: { reference: string; emailReady: boolean } } | null>(null)
+
   useEffect(() => {
-    const checkoutStatus = new URLSearchParams(window.location.search).get('checkout')
-    if (checkoutStatus === 'success') setCheckoutNotice('Thanks for returning from Stripe Checkout. Check your Stripe receipt for payment confirmation.')
-    if (checkoutStatus === 'cancelled') setCheckoutNotice('Checkout was canceled. You can restart anytime.')
-    if (checkoutStatus) window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`)
+    const params = new URLSearchParams(window.location.search)
+    const requestedPlan = params.get('plan')
+    const requestedKind = params.get('kind')
+    if (plans.some(item => item.name === requestedPlan)) setPlan(requestedPlan as Plan)
+    if (requestedKind === 'support') setKind('support')
+    if (requestedPlan || requestedKind) window.history.replaceState(null, '', `${window.location.pathname}#contact`)
   }, [])
+
   function startAnotherMessage(formKind: FormKind) {
     setSubmissionIds(current => ({ ...current, [formKind]: crypto.randomUUID() }))
     setSuccess(null)
   }
-  function choosePlan(selected: Plan) {
-    setPlan(selected)
-    setKind('inquiry')
-    if (success?.kind === 'inquiry') setSuccess(null)
-    document.getElementById('contact')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
-  }
-  async function startCheckout(selectedPlan: CheckoutPlan, paymentType: 'one_time' | 'subscription') {
-    if (checkoutBusy) return
-    const checkoutKey = `${selectedPlan}:${paymentType}`
-    const requestId = checkoutRequestIds.current.get(checkoutKey) ?? crypto.randomUUID()
-    checkoutRequestIds.current.set(checkoutKey, requestId)
-    setCheckoutBusy(checkoutKey)
-    setCheckoutError('')
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, plan: selectedPlan, paymentType }),
-      })
-      const result = await response.json().catch(() => null) as { url?: unknown; error?: unknown } | null
-      if (!response.ok || typeof result?.url !== 'string') {
-        setCheckoutError(typeof result?.error === 'string' ? result.error : 'Checkout is unavailable right now. Please try again or contact us.')
-        setCheckoutBusy(null)
-        return
-      }
-      window.location.assign(result.url)
-    } catch {
-      setCheckoutError('We could not connect to checkout. Please try again or contact us.')
-      setCheckoutBusy(null)
-    }
-  }
-  function scrollPortfolio(direction: -1 | 1) {
-    const portfolio = portfolioRef.current
-    if (!portfolio) return
-    portfolio.scrollBy({ left: portfolio.clientWidth * direction * 0.8, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
-  }
+
   return <>
-    <a className="skip-link" href="#main">Skip to content</a>
-    <header className="site-header" id="home"><div className="container header-inner"><Brand /><nav className={menuOpen ? 'navigation open' : 'navigation'} aria-label="Main navigation"><a href="#services" onClick={() => setMenuOpen(false)}>What we do</a><a href="#work" onClick={() => setMenuOpen(false)}>Our work</a><a href="#pricing" onClick={() => setMenuOpen(false)}>Our plans</a><a href="#about" onClick={() => setMenuOpen(false)}>About us</a><a href="#contact" className="button button-dark nav-cta" onClick={() => setMenuOpen(false)}>Let's talk <ArrowUpRight size={17} /></a></nav><button className="mobile-menu icon-button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></div></header>
+    <SiteHeader />
     <main id="main">
-      <section className="hero container"><div className="hero-copy"><div className="local-pill"><span className="small-dot" /> LOCALLY ROOTED. SOCIALLY CONNECTED.</div><h1>Social media<br /><span className="hero-accent">management</span><br className="desktop-break" /> for local businesses.<Starburst className="heading-spark" /></h1><p>You take care of your business.<br />We take care of the scroll.</p><p className="hero-description">Thoughtful social media management for the local businesses that make Ohio, Pennsylvania, and West Virginia feel like home.</p><div className="hero-actions"><a href="#pricing" className="button button-dark">Find your people <ArrowUpRight size={19} /></a><a href="#work" className="text-link">See what we do <ArrowRight size={17} /></a></div><div className="hero-footnote"><MapPin size={15} /><span>Three states. One connected community.</span></div></div>
-        <div className="hero-art" aria-label="Sample social media designs for local businesses"><div className="art-orbit" /><Starburst className="art-spark" /><div className="story-card"><img src={image('plants', 450)} alt="Lush green plants in a local shop content concept" width={450} height={560} /><span>LITTLE LEAF<br /><strong>A little greener.<br />A little happier.</strong></span><div className="story-footer">LOCAL LOOKS GOOD ON YOU.</div></div><div className="phone-card"><div className="phone-header"><span className="coffee-avatar"><Leaf size={15} /></span><span><strong>willowandco.coffee</strong><small>Your neighborhood coffee spot</small></span><span className="phone-dots">•••</span></div><div className="phone-photo"><img src={image('coffee', 700)} alt="Coffee and a cozy café table in a sample social post" width={700} height={870} fetchPriority="high" /><span className="coffee-wordmark">willow & co.</span><div className="coffee-headline">Good mornings<br />start here.</div><span className="coffee-photo-footer">GOOD COFFEE. BETTER COMPANY.</span></div><div className="phone-icons"><Heart size={21} /><MessageCircle size={21} /><Send size={20} /><span className="save-icon" /></div><div className="phone-caption"><strong>willowandco.coffee</strong> A warm cup. A familiar face.<br />See you around the corner.</div><small className="concept-label">SAMPLE CONTENT CONCEPT</small></div><div className="yellow-note"><Starburst className="note-star" />Your next regular<br />starts with<br /><strong>a scroll.</strong><ArrowUpRight size={31} /></div><div className="local-love"><span className="love-heart"><Heart size={21} fill="currentColor" /></span><span>A little local love.<small>Content with community at its heart.</small></span></div><span className="art-caption">YOUR BUSINESS. JUST A LITTLE MORE SOCIAL.</span></div>
+      <section className="hero container"><div className="hero-copy"><div className="local-pill"><span className="small-dot" /> LOCALLY ROOTED. SOCIALLY CONNECTED.</div><h1>Social media<br /><span className="hero-accent">management</span><br className="desktop-break" /> for local businesses.<Starburst className="heading-spark" /></h1><p>You take care of your business.<br />We take care of the scroll.</p><p className="hero-description">Thoughtful social media management for the local businesses that make Ohio, Pennsylvania, and West Virginia feel like home.</p><div className="hero-actions"><Link to="/billing" className="button button-dark">Find your people <ArrowUpRight size={19} /></Link><Link to="/portfolio" className="text-link">See our work <ArrowRight size={17} /></Link></div><div className="hero-footnote"><MapPin size={15} /><span>Three states. One connected community.</span></div></div>
+        <div className="hero-art" aria-label="Sample social media designs for local businesses"><div className="art-orbit" /><Starburst className="art-spark" /><div className="story-card"><img src={image('florals', 450)} alt="Seasonal flowers in a sample social post" width={450} height={560} /><span>LOCAL STORIES<br /><strong>A little closer.<br />A little more social.</strong></span><div className="story-footer">MADE FOR THE NEIGHBORHOOD.</div></div><div className="phone-card"><div className="phone-header"><span className="coffee-avatar"><Leaf size={15} /></span><span><strong>willowandco.coffee</strong><small>Your neighborhood coffee spot</small></span><span className="phone-dots">•••</span></div><div className="phone-photo"><img src={image('coffee', 700)} alt="Coffee and a cozy café table in a sample social post" width={700} height={870} fetchPriority="high" /><span className="coffee-wordmark">willow & co.</span><div className="coffee-headline">Good mornings<br />start here.</div><span className="coffee-photo-footer">GOOD COFFEE. BETTER COMPANY.</span></div><div className="phone-icons"><Heart size={21} /><MessageCircle size={21} /><Send size={20} /><span className="save-icon" /></div><div className="phone-caption"><strong>willowandco.coffee</strong> A warm cup. A familiar face.<br />See you around the corner.</div><small className="concept-label">SAMPLE CONTENT CONCEPT</small></div><div className="yellow-note"><Starburst className="note-star" />Your next regular<br />starts with<br /><strong>a scroll.</strong><ArrowUpRight size={31} /></div><div className="local-love"><span className="love-heart"><Heart size={21} fill="currentColor" /></span><span>A little local love.<small>Content with community at its heart.</small></span></div><span className="art-caption">YOUR BUSINESS. JUST A LITTLE MORE SOCIAL.</span></div>
       </section>
       <div className="community-strip"><div className="container"><span>SMALL-TOWN HEART. BIG-PICTURE THINKING.</span><div className="state-list"><span>Ohio</span><Starburst className="strip-star" /><span>Pennsylvania</span><Starburst className="strip-star" /><span>West Virginia</span></div><div className="platform-list"><Instagram size={19} /><span>Instagram</span><Facebook size={18} /><span>Facebook & more</span></div></div></div>
       <section className="section services container" id="services"><div className="section-intro"><div><p className="eyebrow">LESS ON YOUR PLATE. MORE ON YOUR FEED.</p><h2>Your social media,<br /><span className="muted-heading">in good hands.</span></h2></div><p>You've got a business to run. We bring the ideas, the consistency, and the care that help your story reach the right people.</p></div><div className="services-grid">{[{ icon: PenTool, name: 'Content with character', text: 'Posts and captions that sound like you, not like everyone else.' }, { icon: CalendarDays, name: 'Consistency, handled', text: 'Thoughtful planning and publishing that keep your business showing up.' }, { icon: MessageCircle, name: 'Real connections', text: 'A community-first approach that turns a feed into a conversation.' }, { icon: BarChart3, name: 'A clearer picture', text: "Simple insights to understand what's working and where to go next." }].map((service, index) => <article className="service" key={service.name}><div className="service-top"><service.icon size={25} strokeWidth={1.5} /><span>0{index + 1}</span></div><h3>{service.name}</h3><p>{service.text}</p></article>)}</div></section>
-      <section className="work-section section" id="work"><div className="container"><div className="section-intro"><div><p className="eyebrow">A LITTLE OF WHAT WE CAN DO</p><h2>Local stories.<br /><span className="muted-heading">Worth sharing.</span></h2></div><div className="work-intro"><p>Step into six sample businesses and see how their everyday stories can become thoughtful social content.</p><span className="sample-disclaimer">Illustrative portfolio · Not actual client work</span></div></div><div className="portfolio-toolbar"><div className="work-filters" aria-label="Filter sample work">{['All work', 'Food & drink', 'Retail'].map(item => <button key={item} className={filter === item ? 'filter active' : 'filter'} onClick={() => { setFilter(item); portfolioRef.current?.scrollTo({ left: 0, behavior: 'auto' }) }} aria-pressed={filter === item}>{item}</button>)}</div><div className="portfolio-controls"><span>Scroll to explore</span><button className="icon-button" onClick={() => scrollPortfolio(-1)} aria-label="Scroll portfolio backward"><ChevronLeft size={20} /></button><button className="icon-button" onClick={() => scrollPortfolio(1)} aria-label="Scroll portfolio forward"><ChevronRight size={20} /></button></div></div><div className="portfolio-grid" ref={portfolioRef} role="region" aria-label="Sample business portfolio" tabIndex={0}>{projects.filter(item => filter === 'All work' || item.category === filter).map(item => <article className="project" key={item.name}><button className={`project-image ${item.color}`} onClick={() => setProject(item)} aria-label={`View ${item.name} sample project`}><img src={image(item.image)} alt={`${item.name} sample social media artwork`} width={700} height={800} loading="lazy" /><span className="sample-badge">SAMPLE CONCEPT</span><div className="project-overlay"><span>{item.headline}</span><small>{item.tag}</small></div><span className="project-arrow"><ArrowUpRight size={22} /></span></button><div className="project-description"><div><h3>{item.name}</h3><p>{item.category} <span> / </span> Social content & strategy</p><p className="project-profile">{item.description}</p></div><button className="icon-button" onClick={() => setProject(item)} aria-label={`Read about ${item.name}`}><ArrowUpRight size={22} /></button></div></article>)}</div></div></section>
-      <section className="section pricing container" id="pricing" aria-busy={Boolean(checkoutBusy)}><div className="pricing-intro"><p className="eyebrow">GOOD COMPANY. A PLAN THAT FITS.</p><h2>Let's make it <span className="muted-heading">official.</span></h2><p>Choose one-time payment or automatic monthly billing for social media support, or pay once for the Blueprint.</p><span className="monthly-label"><span className="small-dot" /> MONTHLY PLANS · PAY ONCE OR SUBSCRIBE · BLUEPRINT IS ONE-TIME · USD</span></div><div className="pricing-grid">{plans.map(item => {
-        const oneTimeKey = `${item.name}:one_time`
-        const subscriptionKey = `${item.name}:subscription`
-        return <article className={`price-card ${item.name === 'Friends' ? 'featured' : ''} ${item.name === 'Blueprint' ? 'blueprint-card' : ''}`} key={item.name}>
-          {item.name === 'Friends' && <div className="featured-label"><Sparkles size={14} /> THE SWEET SPOT</div>}
-          {item.name === 'Blueprint' && <div className="featured-label"><Sparkles size={14} /> ONE-TIME STRATEGY + AD LAUNCH</div>}
-          <p className="plan-title">{item.name}</p>
-          <p className="plan-description">{item.description}</p>
-          <div className="plan-price">${item.price}<span>{item.cadence === 'month' ? '/ month' : 'one-time'}</span></div>
-          <div className="price-line" />
-          <p className="included-label">A LITTLE LOOK AT WHAT'S INCLUDED</p>
-          <ul>{item.features.map(feature => <li key={feature}><Check size={16} />{feature}</li>)}</ul>
-          <div className="checkout-actions">
-            {item.cadence === 'month' ? <>
-              <button className="button button-outline" onClick={() => startCheckout(item.name, 'one_time')} disabled={Boolean(checkoutBusy)}>{checkoutBusy === oneTimeKey ? 'Opening checkout…' : `Pay once · $${item.price}`} <ArrowUpRight size={16} /></button>
-              <button className={`button ${item.name === 'Friends' ? 'button-dark' : 'button-outline'}`} onClick={() => startCheckout(item.name, 'subscription')} disabled={Boolean(checkoutBusy)}>{checkoutBusy === subscriptionKey ? 'Opening checkout…' : `Subscribe · $${item.price}/mo`} <ArrowUpRight size={16} /></button>
-            </> : <button className="button button-dark" onClick={() => startCheckout('Blueprint', 'one_time')} disabled={Boolean(checkoutBusy)}>{checkoutBusy === oneTimeKey ? 'Opening checkout…' : 'Pay $200 once'} <ArrowUpRight size={16} /></button>}
-            <button className="checkout-question" onClick={() => choosePlan(item.name)}>Questions? Let's talk</button>
-          </div>
-        </article>
-      })}</div>{checkoutError && <p className="checkout-error" role="alert">{checkoutError}</p>}{checkoutNotice && <p className="checkout-notice" role="status">{checkoutNotice}</p>}<p className="pricing-note">One-time payments for monthly plans cover one month and do not renew. Subscriptions renew automatically each month until canceled; email <a href="mailto:tristatereviewss@gmail.com">tristatereviewss@gmail.com</a> for help managing a subscription. Blueprint projections are illustrative, not guaranteed results. The $200 Blueprint includes $50 toward the initial ad run; additional standard ad runs are $50 each. Exact service deliverables are agreed before work begins.</p></section>
+      <section className="home-paths"><div className="container home-paths-inner"><div><p className="eyebrow">TAKE A CLOSER LOOK</p><h2>Good work starts<br />with a good fit.</h2><p>Explore the sample work, then choose the kind of support that fits your next step.</p></div><div className="home-path-links"><Link to="/portfolio"><span><small>01 / PORTFOLIO</small><strong>See the work</strong></span><ArrowUpRight size={22} /></Link><Link to="/billing"><span><small>02 / BILLING</small><strong>Compare plans & pay</strong></span><ArrowUpRight size={22} /></Link></div></div></section>
       <section className="about-section" id="about"><div className="container about-grid"><div className="about-illustration" aria-hidden="true"><div className="about-circle"><span>OH</span><span>PA</span><span>WV</span><Sparkles size={48} strokeWidth={1.2} /></div><span className="about-sticker">Around here,<br /><strong>local matters.</strong></span></div><div><p className="eyebrow">YOUR NEIGHBORS. YOUR SOCIAL TEAM.</p><h2>We're not just online.<br />We're <span>around here.</span></h2><p>Tri-State Reviews is built for the independent shops, cafés, and everyday businesses that give our communities their character.</p><p>Across Ohio, Pennsylvania, and West Virginia, we help local businesses show up with a voice that feels like their own. No one-size-fits-all feed. Just thoughtful content, good conversations, and people who care.</p><a href="#contact" className="text-link">Meet your next social sidekick <ArrowUpRight size={18} /></a></div></div></section>
-      <section className="section contact-section container" id="contact"><div className="contact-copy"><p className="eyebrow">IT STARTS WITH A HELLO</p><h2>Big ideas.<br />Small-town warmth.<br /><span className="muted-heading">Let's talk.</span></h2><p>Tell us what you're working on.<br />We'll help you find your next step.</p><a className="contact-email" href="mailto:tristatereviewss@gmail.com">tristatereviewss@gmail.com <ArrowUpRight size={17} /></a><div className="contact-location"><MapPin size={18} /><span>Proudly serving<br /><strong>Ohio, Pennsylvania & West Virginia</strong></span></div><div className="support-note"><MessageCircle size={20} /><div><strong>Already part of the community?</strong><p>Use the support tab. We're here to help.</p></div></div></div><div className="contact-panel"><div className="form-tabs" role="tablist" aria-label="Message type"><button id="inquiry-tab" role="tab" aria-selected={kind === 'inquiry'} aria-controls="contact-form-panel" tabIndex={kind === 'inquiry' ? 0 : -1} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { setKind('support'); document.getElementById('support-tab')?.focus() } }} onClick={() => setKind('inquiry')} className={kind === 'inquiry' ? 'selected' : ''}>Let's work together <ArrowUpRight size={16} /></button><button id="support-tab" role="tab" aria-selected={kind === 'support'} aria-controls="contact-form-panel" tabIndex={kind === 'support' ? 0 : -1} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { setKind('inquiry'); document.getElementById('inquiry-tab')?.focus() } }} onClick={() => setKind('support')} className={kind === 'support' ? 'selected' : ''}>I need support <MessageCircle size={16} /></button></div><div role="tabpanel" id="contact-form-panel" aria-labelledby={`${kind}-tab`}><ContactForm kind={kind} plan={plan} setPlan={setPlan} success={success?.kind === kind ? success.data : null} setSuccess={(data) => setSuccess(data ? { kind, data } : null)} submissionId={submissionIds[kind]} onStartAnother={() => startAnotherMessage(kind)} /></div></div></section>
-      <section className="faq-section container">
-        <div><p className="eyebrow">A FEW GOOD QUESTIONS</p><h2>The little details.</h2></div>
-        <div className="faq-list">{[
-          { title: 'What does Tri-State Reviews do?', answer: 'Tri-State Reviews provides social media management for independent small businesses across Ohio, Pennsylvania, and West Virginia. Services include content planning, branded posts and captions, scheduled publishing, and community support. Monthly plans start at $150, and exact deliverables are agreed before service begins.' },
-          { title: 'Which areas do you serve?', answer: "We work with local businesses across Ohio, Pennsylvania, and West Virginia. If you're nearby but outside these states, send us a note and let's talk about your business." },
-          { title: 'How do I choose the right plan?', answer: "Start with how many platforms you need help with and how much support you want. Associates is a starting point, Friends adds community support, and Family brings more strategy into the mix. The one-time Blueprint offers a strategy slideshow, illustrative projections, and an initial ad launch. We'll agree on the exact scope together." },
-          { title: 'Are these real client projects?', answer: 'The portfolio currently features clearly labeled sample concepts. They illustrate our creative approach and potential deliverables, not actual client relationships or measured results.' },
-          { title: 'How do checkout and monthly plans work?', answer: 'Associates, Friends, and Family can be paid once for one month or set up as subscriptions that renew automatically each month until canceled. Blueprint is a one-time $200 payment only. Stripe securely hosts checkout and processes payments. Contact tristatereviewss@gmail.com for help managing or canceling a subscription.' },
-          { title: 'What happens after I reach out?', answer: "Your message is saved securely for our team. When email delivery is configured, you'll receive a confirmation and we'll be notified. Then we'll follow up to learn more about your goals. Submitting an inquiry alone does not start a subscription or charge you." },
-        ].map(item => <details key={item.title}><summary>{item.title}<ChevronDown size={18} /></summary><p>{item.answer}</p></details>)}</div>
-      </section>
-      <section className="advertise-section container" id="advertise" aria-labelledby="advertise-heading">
-        <div>
-          <p className="eyebrow">A LOCAL PARTNERSHIP</p>
-          <h2 id="advertise-heading">Advertise <span className="muted-heading">with us.</span></h2>
-          <p>Have something you’d like to promote? Get in touch to discuss potential ad placements, availability, and details.</p>
-        </div>
-        <a className="button button-dark" href="mailto:tristatereviewss@gmail.com?subject=Advertising%20placement%20inquiry">Ask about ad placements <ArrowUpRight size={18} aria-hidden="true" /></a>
-      </section>
+      <section className="section contact-section container" id="contact"><div className="contact-copy"><p className="eyebrow">IT STARTS WITH A HELLO</p><h2>Big ideas.<br />Small-town warmth.<br /><span className="muted-heading">Let's talk.</span></h2><p>Tell us what you're working on.<br />We'll help you find your next step.</p><a className="contact-email" href="mailto:tristatereviewss@gmail.com">tristatereviewss@gmail.com <ArrowUpRight size={17} /></a><div className="contact-location"><MapPin size={18} /><span>Proudly serving<br /><strong>Ohio, Pennsylvania & West Virginia</strong></span></div><div className="support-note"><MessageCircle size={20} /><div><strong>Already part of the community?</strong><p>Use the support tab. We're here to help.</p></div></div></div><div className="contact-panel"><div className="form-tabs" role="tablist" aria-label="Message type"><button id="inquiry-tab" role="tab" aria-selected={kind === 'inquiry'} aria-controls="contact-form-panel" tabIndex={kind === 'inquiry' ? 0 : -1} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { setKind('support'); document.getElementById('support-tab')?.focus() } }} onClick={() => setKind('inquiry')} className={kind === 'inquiry' ? 'selected' : ''}>Let's work together <ArrowUpRight size={16} /></button><button id="support-tab" role="tab" aria-selected={kind === 'support'} aria-controls="contact-form-panel" tabIndex={kind === 'support' ? 0 : -1} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { setKind('inquiry'); document.getElementById('inquiry-tab')?.focus() } }} onClick={() => setKind('support')} className={kind === 'support' ? 'selected' : ''}>I need support <MessageCircle size={16} /></button></div><div role="tabpanel" id="contact-form-panel" aria-labelledby={`${kind}-tab`}><ContactForm kind={kind} plan={plan} setPlan={setPlan} success={success?.kind === kind ? success.data : null} setSuccess={data => setSuccess(data ? { kind, data } : null)} submissionId={submissionIds[kind]} onStartAnother={() => startAnotherMessage(kind)} /></div></div></section>
     </main>
-    <footer className="site-footer"><div className="container footer-main"><div><Brand light /><p>Local roots. Social reach.</p></div><div className="footer-links"><a href="#work">Our work</a><a href="#pricing">Our plans</a><a href="#contact">Get in touch</a><a href="#advertise">Advertise with us</a><a href="#contact" onClick={() => setKind('support')}>Support</a></div><a href="#home" className="back-top">Back to top <ArrowUpRight size={17} /></a></div><div className="container footer-bottom"><span>© {new Date().getFullYear()} Tri-State Reviews. Made for our community.</span><button onClick={() => setPrivacy(true)}>Privacy & your information</button><nav className="social-links" aria-label="Social media"><a href="https://www.facebook.com/profile.php?id=61594742597948" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook size={16} aria-hidden="true" /></a><a href="https://x.com/tristatereih" target="_blank" rel="noopener noreferrer" aria-label="X"><svg className="social-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 1.15h3.68L14.54 10.98 24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.92L18.9 1.15Zm-1.29 19.61h2.04L6.49 3.09H4.3l13.31 17.67Z" /></svg></a><a href="https://www.tiktok.com/@tristatereviews" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg className="social-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.35V2h-3.4v13.67a2.9 2.9 0 0 1-2.9 2.75 2.9 2.9 0 0 1 0-5.8c.3 0 .6.05.9.14V9.29a6.3 6.3 0 1 0 5.4 6.24V8.58a8.16 8.16 0 0 0 4.77 1.53V6.73c-.34 0-.67-.01-1-.04Z" /></svg></a><a href="https://www.instagram.com/tristatereviewss/?hl=en" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram size={16} aria-hidden="true" /></a><a href="https://www.youtube.com/feed/you" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><Youtube size={17} aria-hidden="true" /></a></nav><span>OH · PA · WV</span></div></footer>
-    {project && <Dialog title={project.name} close={() => setProject(null)}><p className="sample-disclaimer">Illustrative sample · Not an actual client project</p><img className="dialog-image" src={image(project.image, 800)} alt={`${project.name} sample creative direction`} width={800} height={450} /><p>{project.description}</p><h3>The sample scope</h3><ul className="deliverables">{project.deliverables.map(item => <li key={item}><Check size={17} />{item}</li>)}</ul><p className="dialog-note">These concepts demonstrate our approach. No client relationship or performance results are implied.</p><button className="button button-dark" onClick={() => { setProject(null); choosePlan('Not sure yet') }}>Create something for my business <ArrowUpRight size={17} /></button></Dialog>}
-    {privacy && <Dialog title="Your information, handled with care." close={() => setPrivacy(false)}><p>When you send an inquiry or support request, we store your name, email address, message, and any business, location, or plan details you provide in our Netlify-managed database.</p><p>We use these details to respond to your request, manage support, and send a transactional confirmation. Messages are shared with our email delivery provider only to deliver those emails. Submitting a form does not subscribe you to a marketing list.</p><p>Payments and payment details are handled by Stripe on its hosted checkout page. This website does not receive or store your card number. Stripe processes your transaction and subscription information.</p><p>Contact <a href="mailto:tristatereviewss@gmail.com">tristatereviewss@gmail.com</a> to request access, correction, or deletion of information we hold or to get help with a subscription.</p></Dialog>}
+    <SiteFooter />
   </>
 }
