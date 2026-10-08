@@ -4,7 +4,7 @@ import { ArrowUpRight, Facebook, Instagram, Menu, Youtube, X } from 'lucide-reac
 import { Dialog } from './dialog'
 
 function Brand({ light = false }: { light?: boolean }) {
-  return <Link to="/" className={`brand ${light ? 'brand-light' : ''}`} aria-label="Tri-State Reviews home"><img className="brand-logo" src="/logo.png" alt="" width={415} height={463} /></Link>
+  return <Link to="/" className={`brand ${light ? 'brand-light' : ''}`} aria-label="Tri-State Reviews home"><img className="brand-logo" src={light ? '/logo.png' : '/logo-transparent.png'} alt="" width={415} height={463} /></Link>
 }
 
 export function SiteHeader() {
