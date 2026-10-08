@@ -1,6 +1,6 @@
 # Tri-State Reviews
 
-A responsive social media management website for local businesses in Ohio, Pennsylvania, and West Virginia. The site includes monthly pricing, a one-time strategy and ad-launch offer, filterable sample creative projects, inquiry and support forms, and a community-focused visual identity.
+A responsive social media management website for local businesses in Ohio, Pennsylvania, and West Virginia. The site separates its homepage, portfolio, and plans and billing into focused pages, with inquiry and support forms and a community-focused visual identity.
 
 ## Technology
 
@@ -60,13 +60,17 @@ The public submission endpoint checks origin, validates and bounds input, requir
 
 ## Content editing
 
-- Brand, landing-page copy, plans, sample projects, and FAQs: `src/routes/index.tsx`
+- Homepage and inquiry/support form: `src/routes/index.tsx`
+- Portfolio and interactive Blueprint sample slideshow: `src/routes/portfolio.tsx`
+- Plan details, billing FAQs, and Stripe checkout: `src/routes/billing.tsx`
+- Shared plan and portfolio data: `src/lib/site-data.ts`
+- Shared navigation, footer, and privacy dialog: `src/components/site-shell.tsx`
 - Site title and share description: `src/routes/__root.tsx`
 - Colors, typography, responsive layout, and motion preferences: `src/styles.css`
 - Sender integration and email copy: `netlify/lib/email.ts`
-- Photos: `public/img/`; the original stock photographs came from Unsplash image IDs `photo-1442512595331-e89e73853f31`, `photo-1416879595882-3373a0480b5b`, and `photo-1509440159596-0249088772ff`. The floral, bookshop, and market samples use `photo-1490750967868-88aa4486c946`, `photo-1507842217343-583bb7270b66`, and `photo-1542838132-92c53300491e` respectively.
+- Portfolio photographs: `public/img/`; images are served through Netlify Image CDN.
 
-The monthly plans are Associates ($150), Friends ($300), and Family ($450), priced in USD. Customers can pay once for a single month or select an automatically renewing monthly subscription. The Blueprint is a $200 one-time offer with a strategy slideshow, illustrative projections, and an initial ad launch including $50 toward ad spend; additional standard ad runs are $50 each. Projections are illustrative, not guaranteed outcomes. Listed scopes are a starting point; final deliverables are agreed with the customer before service begins. Selecting an offer to inquire does not create a subscription or charge a payment. The portfolio businesses are fictional, clearly labeled sample concepts, not real clients or verified results. Replace them with approved client work when available.
+The monthly plans are Associates ($150), Friends ($300), and Family ($450), priced in USD. Customers can pay once for a single month or select an automatically renewing monthly subscription. The Blueprint is a $200 one-time offer with a strategy slideshow, illustrative projections, and an initial ad launch including $50 toward ad spend; additional standard ad runs are $50 each. Projections are illustrative, not guaranteed outcomes. Listed scopes are a starting point; final deliverables are agreed with the customer before service begins. Selecting an offer to inquire does not create a subscription or charge a payment. The portfolio includes the Tri-State Reviews in-house website and clearly labeled fictional sample concepts; they do not imply outside client relationships or verified results.
 
 ## Validation
 

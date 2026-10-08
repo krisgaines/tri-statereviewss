@@ -44,8 +44,8 @@ export default async function checkout(request: Request) {
   const siteUrl = new URL(request.url).origin
   const sessionParams = new URLSearchParams({
     mode: parsed.paymentType === 'subscription' ? 'subscription' : 'payment',
-    success_url: `${siteUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}#pricing`,
-    cancel_url: `${siteUrl}/?checkout=cancelled#pricing`,
+    success_url: `${siteUrl}/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/billing?checkout=cancelled`,
     client_reference_id: parsed.requestId,
     'line_items[0][price_data][currency]': 'usd',
     'line_items[0][price_data][unit_amount]': String(selectedPlan.amount),
